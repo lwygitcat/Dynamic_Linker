@@ -23,6 +23,7 @@ Elf32_Ehdr *syshdr ;
 static int elf_load_stage1(Elf32_Ehdr *hdr);
 static int elf_load_stage2(Elf32_Ehdr *hdr);
 static int elf_do_reloc(Elf32_Ehdr *hdr, Elf32_Rel *rel, Elf32_Shdr *reltab);
+void * elf_lookup_symbol(char * name);
 
 /*Check the starting bits of the elf file*/
 bool8 elf_check_file(Elf32_Ehdr *hdr) {
@@ -163,7 +164,7 @@ static int elf_get_symval(Elf32_Ehdr *hdr, int table, uint32 idx) {
 		Elf32_Shdr *strtab = elf_section(hdr, symtab->sh_link);
 		const char *name = (const char *)hdr + strtab->sh_offset + symbol->st_name;
  
-		extern void *elf_lookup_symbol(const char *name);
+		//extern void *elf_lookup_symbol(const char *name);
 		void *target = elf_lookup_symbol(name);
  
 		if(target == NULL) {
@@ -211,15 +212,15 @@ Section Headers:
 
 */
 
-/* ========================need to be added 
 void * elf_lookup_symbol(char * name)
 {
   //iterate through the symtable of xinu.elf----[ Section type = SHT_SYMTAB =2]
   //if its name matched the name of the symbol, break; 
   // fetch infomation of the symbol for lookup_symbol
+  return NULL;
 
 }
-*/
+
 
 
 
@@ -282,7 +283,7 @@ static int elf_load_stage1(Elf32_Ehdr *hdr) {
 static int elf_load_stage2(Elf32_Ehdr *hdr) {
 	Elf32_Shdr *shdr = elf_sheader(hdr);
  
-	uint32 i, idx;
+	unsigned int i, idx;
 	// Iterate over section headers
 	for(i = 0; i < hdr->e_shnum; i++) {
 		Elf32_Shdr *section = &shdr[i];
@@ -293,7 +294,7 @@ static int elf_load_stage2(Elf32_Ehdr *hdr) {
 			for(idx = 0; idx < section->sh_size / section->sh_entsize; idx++) {
 				Elf32_Rel *reltab = &((Elf32_Rel *)((int)hdr + section->sh_offset))[idx];
 				int result = elf_do_reloc(hdr, reltab, section);
-				// On kprintf, display a message and return
+				// On error, display a message and return
 				if(result == ELF_RELOC_ERR) {
 					kprintf("Failed to relocate symbol.\n");
 					return ELF_RELOC_ERR;
@@ -301,9 +302,8 @@ static int elf_load_stage2(Elf32_Ehdr *hdr) {
 			}
 		}
 	}
-
-
-
+	return 0;
+}
 
 /*----------------------------------------------------------------------------------
  *  elf_do_reloc  -  Relocate the symbols
@@ -316,15 +316,18 @@ static int elf_do_reloc(Elf32_Ehdr *hdr, Elf32_Rel *rel, Elf32_Shdr *reltab) {
 	int *ref = (int *)(addr + rel->r_offset);
 
 
-   //seg2
+
+
    // Symbol value
+
 	int symval = 0;
+
 	if(ELF32_R_SYM(rel->r_info) != SHN_UNDEF) {
 		symval = elf_get_symval(hdr, reltab->sh_link, ELF32_R_SYM(rel->r_info));
 		if(symval == ELF_RELOC_ERR) return ELF_RELOC_ERR;
 	}
 
-   //seg3
+   
    // Relocate based on type
 	switch(ELF32_R_TYPE(rel->r_info)) {
 		case R_386_NONE:
@@ -343,6 +346,8 @@ static int elf_do_reloc(Elf32_Ehdr *hdr, Elf32_Rel *rel, Elf32_Shdr *reltab) {
 			kprintf("Unsupported Relocation Type (%d).\n", ELF32_R_TYPE(rel->r_info));
 			return ELF_RELOC_ERR;
 	}
+
+
 	return symval;
 }
    
