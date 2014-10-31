@@ -30,7 +30,7 @@ typedef int32  Elf32_Sword;	// Signed int
 // #pragma pack(1)  Force no padding 
 #pragma pack(1)
 typedef struct {
-	uint8_t		e_ident[ELF_NIDENT];
+	uint8		e_ident[ELF_NIDENT];
 	Elf32_Half	e_type;
 	Elf32_Half	e_machine;
 	Elf32_Word	e_version;
@@ -128,8 +128,8 @@ typedef struct {
 	Elf32_Word		st_name;
 	Elf32_Addr		st_value;
 	Elf32_Word		st_size;
-	uint8_t			st_info;
-	uint8_t			st_other;
+	uint8   		st_info;
+	uint8			st_other;
 	Elf32_Half		st_shndx;
 } Elf32_Sym;
 #pragma pack()

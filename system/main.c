@@ -27,5 +27,7 @@ process	main(void)
     int fd = open(RFILESYS, "xinu.elf", "or");
     int32 filesize = control(RFILESYS, RFS_CTL_SIZE, fd, 0);
     kprintf("size: %d", filesize); //size of helloworld
+    char *c =getmem(filesize);
+    int rs =read(fd,c,filesize);
 	return OK;
 }

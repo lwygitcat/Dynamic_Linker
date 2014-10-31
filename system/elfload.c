@@ -144,7 +144,7 @@ static inline Elf32_Shdr *elf_section(Elf32_Ehdr *hdr, int idx) {
  *  elf_get_symval  -  Access the symbol address [still some confusions here!]
  *----------------------------------------------------------------------------------
  */
-static int elf_get_symval(Elf32_Ehdr *hdr, int table, uint idx) {
+static int elf_get_symval(Elf32_Ehdr *hdr, int table, uint32 idx) {
 	if(table == SHN_UNDEF || idx == SHN_UNDEF) return 0;
 	Elf32_Shdr *symtab = elf_section(hdr, table);
  
