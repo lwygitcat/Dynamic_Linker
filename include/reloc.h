@@ -104,7 +104,7 @@ typedef struct {
 
 /*Section Header Types and Attributes field*/
 # define SHN_UNDEF	(0x00) // Undefined/Not present
- 
+# define SHN_ABS     (0xfff1) //absolute value, not change because of relocation
 enum ShT_Types {
 	SHT_NULL	= 0,   // Null section
 	SHT_PROGBITS	= 1,   // Program information
@@ -173,7 +173,7 @@ typedef struct {
 
 /*Relocation Type for Non-dynamic Linking*/
 # define ELF32_R_SYM(INFO)	((INFO) >> 8)
-# define ELF32_R_TYPE(INFO)	((uint8_t)(INFO))
+# define ELF32_R_TYPE(INFO)	((uint8)(INFO))
  
 enum RtT_Types {
 	R_386_NONE		= 0, // No relocation

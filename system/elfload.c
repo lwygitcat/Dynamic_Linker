@@ -4,7 +4,7 @@
 
 /* -----------------------------------------------------------------------
 * To be solved
-* 1. All error message in the elf_load_file not defined
+* 1. All Error message in the elf_load_file not defined
 * 2. Function elf_load_stage1(),elf_load_stage2() not defined >DECIDED to delete the elf_load_rel function.
 * 3. in elf_load_file(), does xinu support string type? > using char[] type
 * 4. How to decide where the file is loaded > using a char[] big enough to hold it.
@@ -20,26 +20,27 @@
 
 //Global variable to store the address of the xinu.elf file. refer to event eventprocess.c
 Elf32_Ehdr *syshdr ;
-
-
+static int elf_load_stage1(Elf32_Ehdr *hdr);
+static int elf_load_stage2(Elf32_Ehdr *hdr);
+static int elf_do_reloc(Elf32_Ehdr *hdr, Elf32_Rel *rel, Elf32_Shdr *reltab);
 
 /*Check the starting bits of the elf file*/
 bool8 elf_check_file(Elf32_Ehdr *hdr) {
 	if(!hdr) return SYSERR;
 	if(hdr->e_ident[EI_MAG0] != ELFMAG0) {
-		ERROR("ELF Header EI_MAG0 incorrect.\n");
+		kprintf("ELF Header EI_MAG0 incorrect.\n");
 		return SYSERR;
 	}
 	if(hdr->e_ident[EI_MAG1] != ELFMAG1) {
-		ERROR("ELF Header EI_MAG1 incorrect.\n");
+		kprintf("ELF Header EI_MAG1 incorrect.\n");
 		return SYSERR;
 	}
 	if(hdr->e_ident[EI_MAG2] != ELFMAG2) {
-		ERROR("ELF Header EI_MAG2 incorrect.\n");
+		kprintf("ELF Header EI_MAG2 incorrect.\n");
 		return SYSERR;
 	}
 	if(hdr->e_ident[EI_MAG3] != ELFMAG3) {
-		ERROR("ELF Header EI_MAG3 incorrect.\n");
+		kprintf("ELF Header EI_MAG3 incorrect.\n");
 		return SYSERR;
 	}
 	return TRUE;
@@ -49,27 +50,27 @@ bool8 elf_check_file(Elf32_Ehdr *hdr) {
 /*check other ELF file header matches requirements*/
 bool8 elf_check_supported(Elf32_Ehdr *hdr) {
 	if(!elf_check_file(hdr)) {
-		ERROR("Invalid ELF File.\n");
+		kprintf("Invalid ELF File.\n");
 		return SYSERR;
 	}
 	if(hdr->e_ident[EI_CLASS] != ELFCLASS32) {
-		ERROR("Unsupported ELF File Class.\n");
+		kprintf("Unsupported ELF File Class.\n");
 		return SYSERR;
 	}
 	if(hdr->e_ident[EI_DATA] != ELFDATA2LSB) {
-		ERROR("Unsupported ELF File byte order.\n");
+		kprintf("Unsupported ELF File byte order.\n");
 		return SYSERR;
 	}
 	if(hdr->e_machine != EM_386) {
-		ERROR("Unsupported ELF File target.\n");
+		kprintf("Unsupported ELF File target.\n");
 		return SYSERR;
 	}
 	if(hdr->e_ident[EI_VERSION] != EV_CURRENT) {
-		ERROR("Unsupported ELF File version.\n");
+		kprintf("Unsupported ELF File version.\n");
 		return SYSERR;
 	}
 	if(hdr->e_type != ET_REL && hdr->e_type != ET_EXEC) {
-		ERROR("Unsupported ELF File type.\n");
+		kprintf("Unsupported ELF File type.\n");
 		return SYSERR;
 	}
 	return TRUE;
@@ -89,12 +90,12 @@ static inline void *elf_load_rel(Elf32_Ehdr *hdr) {
 	int result;
 	result = elf_load_stage1(hdr);
 	if(result == ELF_RELOC_ERR) {
-		ERROR("Unable to load ELF file.\n");
+		kprintf("Unable to load ELF file.\n");
 		return NULL;
 	} 
 	result = elf_load_stage2(hdr);
 	if(result == ELF_RELOC_ERR) {
-		ERROR("Unable to load ELF file.\n");
+		kprintf("Unable to load ELF file.\n");
 		return NULL;
 	}
 	// TODO : Parse the program header (if present)
@@ -105,8 +106,8 @@ static inline void *elf_load_rel(Elf32_Ehdr *hdr) {
 void *elf_load_file(void *file) {
 	Elf32_Ehdr *hdr = (Elf32_Ehdr *)file;
 	if(!elf_check_supported(hdr)) {
-		ERROR("ELF File cannot be loaded.\n");
-		return;
+		kprintf("ELF File cannot be loaded.\n");
+		return NULL;
 	}
 	switch(hdr->e_type) {
 		case ET_EXEC:
@@ -149,7 +150,7 @@ static int elf_get_symval(Elf32_Ehdr *hdr, int table, uint32 idx) {
 	Elf32_Shdr *symtab = elf_section(hdr, table);
  
 	if(idx >= symtab->sh_size) {
-		ERROR("Symbol Index out of Range (%d:%u).\n", table, idx);
+		kprintf("Symbol Index out of Range (%d:%u).\n", table, idx);
 		return ELF_RELOC_ERR;
 	}
  
@@ -171,7 +172,7 @@ static int elf_get_symval(Elf32_Ehdr *hdr, int table, uint32 idx) {
 				// Weak symbol initialized as 0
 				return 0;
 			} else {
-				ERROR("Undefined External Symbol : %s.\n", name);
+				kprintf("Undefined External Symbol : %s.\n", name);
 				return ELF_RELOC_ERR;
 			}
 		} else {
@@ -210,13 +211,15 @@ Section Headers:
 
 */
 
+/* ========================need to be added 
 void * elf_lookup_symbol(char * name)
 {
   //iterate through the symtable of xinu.elf----[ Section type = SHT_SYMTAB =2]
   //if its name matched the name of the symbol, break; 
   // fetch infomation of the symbol for lookup_symbol
-}
 
+}
+*/
 
 
 
@@ -263,7 +266,7 @@ static int elf_load_stage1(Elf32_Ehdr *hdr) {
  
 				// Assign the memory offset to the section offset
 				section->sh_offset = (int)mem - (int)hdr;
-				DEBUG("Allocated memory for a section (%ld).\n", section->sh_size);
+				kprintf("Allocated memory for a section (%ld).\n", section->sh_size);
 			}
 		}
 	}
@@ -290,9 +293,9 @@ static int elf_load_stage2(Elf32_Ehdr *hdr) {
 			for(idx = 0; idx < section->sh_size / section->sh_entsize; idx++) {
 				Elf32_Rel *reltab = &((Elf32_Rel *)((int)hdr + section->sh_offset))[idx];
 				int result = elf_do_reloc(hdr, reltab, section);
-				// On error, display a message and return
+				// On kprintf, display a message and return
 				if(result == ELF_RELOC_ERR) {
-					ERROR("Failed to relocate symbol.\n");
+					kprintf("Failed to relocate symbol.\n");
 					return ELF_RELOC_ERR;
 				}
 			}
@@ -336,8 +339,8 @@ static int elf_do_reloc(Elf32_Ehdr *hdr, Elf32_Rel *rel, Elf32_Shdr *reltab) {
 			*ref = DO_386_PC32(symval, *ref, (int)ref);
 			break;
 		default:
-			// Relocation type not supported, display error and return
-			ERROR("Unsupported Relocation Type (%d).\n", ELF32_R_TYPE(rel->r_info));
+			// Relocation type not supported, display kprintf and return
+			kprintf("Unsupported Relocation Type (%d).\n", ELF32_R_TYPE(rel->r_info));
 			return ELF_RELOC_ERR;
 	}
 	return symval;
