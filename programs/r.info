@@ -1,0 +1,11 @@
+#include <stdio.h>
+
+int main(void) {
+	// your code goes here
+	int i = 0x00000501;
+	printf("%d\n",i>>8);
+	unsigned char c =(unsigned char) (i);
+	printf("%d",c);
+	return 0;
+}
+

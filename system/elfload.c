@@ -19,11 +19,12 @@
 
 
 //Global variable to store the address of the xinu.elf file. refer to event eventprocess.c
-Elf32_Ehdr *syshdr ;
+
+Elf32_Ehdr *syshdr ; //xinu.elf header
 static int elf_load_stage1(Elf32_Ehdr *hdr);
 static int elf_load_stage2(Elf32_Ehdr *hdr);
 static int elf_do_reloc(Elf32_Ehdr *hdr, Elf32_Rel *rel, Elf32_Shdr *reltab);
-void * elf_lookup_symbol(char * name);
+void * elf_lookup_symbol(const char * name);
 
 /*Check the starting bits of the elf file*/
 bool8 elf_check_file(Elf32_Ehdr *hdr) {
@@ -212,12 +213,57 @@ Section Headers:
 
 */
 
-void * elf_lookup_symbol(char * name)
+
+void * elf_readxinu()
 {
-  //iterate through the symtable of xinu.elf----[ Section type = SHT_SYMTAB =2]
-  //if its name matched the name of the symbol, break; 
-  // fetch infomation of the symbol for lookup_symbol
-  return NULL;
+    int fd = open(RFILESYS, "xinu.elf", "or");
+    int32 filesize = control(RFILESYS, RFS_CTL_SIZE, fd, 0);
+    kprintf("size: %d in xinu\n", filesize);
+    syshdr =(Elf32_Ehdr *)getmem(filesize);
+    return NULL;
+}
+
+
+
+void * elf_lookup_symbol(const char * name)
+{
+    Elf32_Shdr *sysshdr = elf_sheader(syshdr); //xinu.elf section header
+
+
+    int i, idx;  //section, symbol names
+    Elf32_Shdr *symtab =NULL;
+    Elf32_Shdr *sysstrtab =NULL;
+   	for(i = 0; i < syshdr->e_shnum; i++) {
+		Elf32_Shdr *section = &sysshdr[i];
+ 
+		// Find the symtab section and its strtab, assuming only 1 symtab
+		if(section->sh_type == SHT_SYMTAB) {
+        symtab =section;
+        sysstrtab = elf_section(syshdr, section->sh_link);
+        break;}
+    }
+
+     
+      int symaddr = (int)syshdr + symtab->sh_offset; //symtab real address
+      Elf32_Sym *symbol = NULL;
+
+	  for(idx = 0; idx < symtab->sh_size / symtab->sh_entsize; idx++) {
+       // find name 
+       symbol = &((Elf32_Sym *)symaddr)[idx];
+       char *symbolname = (char *)syshdr + sysstrtab->sh_offset + symbol->st_name;
+       if (*name == *symbolname ){
+           kprintf("found \n");
+           break;
+        }				
+	  }
+  if (idx == symtab->sh_size / symtab->sh_entsize){
+      kprintf("could not find symbol \n");
+      return NULL;
+  }
+
+  kprintf("symbol address: %h\n", symbol->st_value );
+  return symbol->st_value;  // right
+  
 
 }
 
@@ -283,7 +329,7 @@ static int elf_load_stage1(Elf32_Ehdr *hdr) {
 static int elf_load_stage2(Elf32_Ehdr *hdr) {
 	Elf32_Shdr *shdr = elf_sheader(hdr);
  
-	unsigned int i, idx;
+	 int i, idx;
 	// Iterate over section headers
 	for(i = 0; i < hdr->e_shnum; i++) {
 		Elf32_Shdr *section = &shdr[i];

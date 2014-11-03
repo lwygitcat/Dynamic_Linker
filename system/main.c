@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 extern uint32 nsaddr;
+//extern Elf32_Ehdr *syshdr ;
 
 process	main(void)
 {
@@ -28,6 +29,7 @@ process	main(void)
     int32 filesize = control(RFILESYS, RFS_CTL_SIZE, fd, 0);
     kprintf("size: %d", filesize); //size of helloworld
     char *c =getmem(filesize);
+    syshdr = (Elf32_Ehdr *)c; 
     int rs =read(fd,c,filesize);
 	return OK;
 }
