@@ -275,9 +275,6 @@ void * elf_lookup_symbol(const char * name)   //search symtab, find .text sectio
        int mark = (int)syshdr + sysstrtab->sh_offset + symbol->st_name;
        char *symbolname =(char*)mark;
 
-
-
-      // if (*name == *symbolname ){
            if (strcomp(name,symbolname)==0){
            kprintf("address before: %d\n", idx);
            target = elf_section(syshdr, symbol->st_shndx);
@@ -323,9 +320,49 @@ void * elf_lookup_symbol(const char * name)   //search symtab, find .text sectio
 
 
 void * elf_lookup_main(Elf32_Ehdr *hdr){  //get main address, return main
-   Elf32_Shdr  *target = elf_section(hdr, 1); //assuming .text section always 1
-   kprintf("offset check is %d", target->sh_offset );
-   return (char *)((int)hdr + target->sh_offset);
+ 
+
+    Elf32_Shdr *shdr = elf_sheader(hdr);
+
+    int i, idx;  //section, symbol names
+    Elf32_Shdr *symtab =NULL;
+    Elf32_Shdr *strtab =NULL;
+   	for(i = 0; i < hdr->e_shnum; i++) {
+		Elf32_Shdr *section = &shdr[i];
+ 
+		// Find the symtab section and its strtab, assuming only 1 symtab
+		if(section->sh_type == SHT_SYMTAB) {
+        kprintf("find helloworld symtab section \n");
+        symtab =section;
+        strtab = elf_section(hdr, symtab->sh_link);
+        break;}  //Assuming only one symtab        
+    }
+  
+
+    int symaddr = (int)hdr + symtab->sh_offset; //symtab real address
+      Elf32_Sym *symbol = NULL;
+      Elf32_Shdr *target = NULL; //target memory unit 
+
+	  for(idx = 0; idx < symtab->sh_size / symtab->sh_entsize; idx++) {
+       // find name 
+       symbol = &((Elf32_Sym *)symaddr)[idx];
+       int mark = (int)hdr + strtab->sh_offset + symbol->st_name;
+       char *symbolname =(char*)mark;
+
+
+
+      // if (*name == *symbolname ){
+           if (strcomp("main",symbolname)==0){
+           target = elf_section(hdr, symbol->st_shndx);//main real address in the file .text
+           break;
+        }				
+	  }
+     if (idx == symtab->sh_size / symtab->sh_entsize){
+      kprintf("could not find main \n");
+      return NULL;
+  }
+
+     return (char *)((int)hdr + target->sh_offset+symbol->st_value);
 }
 
 

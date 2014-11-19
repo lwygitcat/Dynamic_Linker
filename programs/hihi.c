@@ -26,8 +26,9 @@ int	main (
 	)
 {
     a=add1(1);
+    kprintf("a=%d\n",a);
     int b=a+2;
     kprintf("b=%d\n", b);
-	kprintf("Hello World!!Hello World!! Hello World!! Hello World!!Hello World!!Hello World!!\n");
+	kprintf("Hello World!!Hello World!!\n");
 	return 0;
 }
