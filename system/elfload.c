@@ -169,7 +169,7 @@ static int elf_get_symval(Elf32_Ehdr *hdr, int table, uint32 idx) {
  
 		//extern void *elf_lookup_symbol(const char *name);
 		void *target = elf_lookup_symbol(name);
- 
+
 		if(target == NULL) {
 			// Extern symbol not found
 			if(ELF32_ST_BIND(symbol->st_info) & STB_WEAK) {
