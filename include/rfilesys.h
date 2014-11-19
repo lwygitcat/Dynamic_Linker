@@ -18,7 +18,7 @@
 /* Global data for the remote server */
 
 #ifndef	RF_SERVER_IP
-#define	RF_SERVER_IP	"128.10.3.53"   //xinu3
+#define	RF_SERVER_IP	"128.10.3.58"   //xinu3
 #endif
 
 #ifndef	RF_SERVER_PORT
