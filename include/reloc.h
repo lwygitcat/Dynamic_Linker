@@ -105,6 +105,9 @@ typedef struct {
 /*Section Header Types and Attributes field*/
 # define SHN_UNDEF	(0x00) // Undefined/Not present
 # define SHN_ABS     (0xfff1) //absolute value, not change because of relocation
+# define SHN_COMMON   (0xfff2) //Uninitialized variables
+
+
 enum ShT_Types {
 	SHT_NULL	= 0,   // Null section
 	SHT_PROGBITS	= 1,   // Program information

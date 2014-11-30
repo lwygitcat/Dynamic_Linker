@@ -11,6 +11,9 @@ int	main (
 	char	*argv[]	/* Arguments array	*/
 	)
 {
-	kprintf("Hello World!!Hello World!! Hello World!! Hello World!!Hello World!!Hello World!!\n");
+    
+	kprintf("Morning!\n");
 	return 0;
 }
+
+

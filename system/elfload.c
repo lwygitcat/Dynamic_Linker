@@ -50,6 +50,7 @@ bool8 elf_check_file(Elf32_Ehdr *hdr) {
 }
 
 
+
 /*check other ELF file header matches requirements*/
 bool8 elf_check_supported(Elf32_Ehdr *hdr) {
     //return TRUE ;
@@ -115,7 +116,7 @@ void *elf_load_file(void *file) {
 	}
 	switch(hdr->e_type) {
 		case ET_EXEC:
-			// TODO : Implement -----------------------------------------For Helloworld, will it cause something wrong here?
+			// TODO : Implement 
 			return NULL;
 		case ET_REL:
 			return elf_load_rel(hdr);
@@ -149,7 +150,10 @@ static inline Elf32_Shdr *elf_section(Elf32_Ehdr *hdr, int idx) {
  *  elf_get_symval  -  Access the symbol address
  *----------------------------------------------------------------------------------
  */
+
+
 static int elf_get_symval(Elf32_Ehdr *hdr, int table, uint32 idx) {
+    
 	if(table == SHN_UNDEF || idx == SHN_UNDEF) return 0;
 	Elf32_Shdr *symtab = elf_section(hdr, table);
  
@@ -180,7 +184,7 @@ static int elf_get_symval(Elf32_Ehdr *hdr, int table, uint32 idx) {
 				return ELF_RELOC_ERR;
 			}
 		} else {
-kprintf("final target is %d\n", (int)target);
+//kprintf("final target is %d\n", (int)target);
 return (int)target;
             
 		}
@@ -190,7 +194,16 @@ return (int)target;
 		// Absolute symbol
 		return symbol->st_value;
 
-	} else {
+	} else if(symbol->st_shndx == SHN_COMMON) {
+		if (symbol->st_value > (int)hdr)
+            return symbol->st_value;
+        else{
+            void * mem =getmem(symbol->st_size);
+            symbol->st_value = (int)mem;
+            return (int)mem;
+            }
+
+	}else {
 		// Internally defined symbol
 		Elf32_Shdr *target = elf_section(hdr, symbol->st_shndx);
        
@@ -225,11 +238,12 @@ void * elf_readxinu()
 {
     int fd = open(RFILESYS, "xinu.elf", "or");
     int32 filesize = control(RFILESYS, RFS_CTL_SIZE, fd, 0);
-    kprintf("xinu.elf size: %d \n", filesize);
+   // kprintf("xinu.elf size: %d \n", filesize);
     void *c = getmem(filesize);
     int rc = read(fd, c, filesize);
     syshdr =(Elf32_Ehdr *)c;
-    kprintf("readxinu here %d\n", syshdr);
+   // kprintf("readxinu here %d\n", syshdr);
+    close(fd);
     return NULL;
 }
 
@@ -244,7 +258,7 @@ int strcomp(char* s1, char* s2)
 
 void * elf_lookup_symbol(const char * name)   //search symtab, find .text section, target it?
 {
-    kprintf("%s to be found in xinu\n", name);
+   // kprintf("%s to be found in xinu\n", name);
     Elf32_Shdr *sysshdr = elf_sheader(syshdr); //xinu.elf section header
 
 
@@ -256,7 +270,7 @@ void * elf_lookup_symbol(const char * name)   //search symtab, find .text sectio
  
 		// Find the symtab section and its strtab, assuming only 1 symtab
 		if(section->sh_type == SHT_SYMTAB) {
-        kprintf("find symtab section \n");
+        //kprintf("find symtab section \n");
         symtab =section;
         sysstrtab = elf_section(syshdr, symtab->sh_link);
         break;}  //Assuming only one symtab
@@ -276,9 +290,9 @@ void * elf_lookup_symbol(const char * name)   //search symtab, find .text sectio
        char *symbolname =(char*)mark;
 
            if (strcomp(name,symbolname)==0){
-           kprintf("address before: %d\n", idx);
+          // kprintf("address before: %d\n", idx);
            target = elf_section(syshdr, symbol->st_shndx);
-           kprintf("%s function found in xinu.symtab\n",symbolname);
+          // kprintf("%s function found in xinu.symtab\n",symbolname);
            break;
         }				
 	  }
@@ -287,10 +301,10 @@ void * elf_lookup_symbol(const char * name)   //search symtab, find .text sectio
       return NULL;
   }
 
-   kprintf("address: %d\n", idx);
-   kprintf("target->offset is %d\n",target->sh_offset );
-   kprintf("symbol->st_value is %d\n", symbol->st_value); 
-   kprintf("in total is %d", 0x100000+symbol->st_value+target->sh_offset );
+  // kprintf("address: %d\n", idx);
+ //  kprintf("target->offset is %d\n",target->sh_offset );
+ //  kprintf("symbol->st_value is %d\n", symbol->st_value); 
+ //  kprintf("in total is %d", 0x100000+symbol->st_value+target->sh_offset );
  
   
 
@@ -332,7 +346,7 @@ void * elf_lookup_main(Elf32_Ehdr *hdr){  //get main address, return main
  
 		// Find the symtab section and its strtab, assuming only 1 symtab
 		if(section->sh_type == SHT_SYMTAB) {
-        kprintf("find helloworld symtab section \n");
+        //kprintf("find helloworld symtab section \n");
         symtab =section;
         strtab = elf_section(hdr, symtab->sh_link);
         break;}  //Assuming only one symtab        
@@ -389,6 +403,21 @@ Section Headers:
   [12] .strtab           STRTAB          00000000 0003dc 00001b 00      0   0  1
 
 */
+
+
+//for uninitialized variables
+void memsets(void *mem, int setnumber, int size){
+    char *setmem =(char*)mem;
+    uint32 i;
+    for (i=0; i<size; i++){
+    *(setmem+i) =0;
+    }
+}
+
+
+
+
+
 static int elf_load_stage1(Elf32_Ehdr *hdr) {
 	Elf32_Shdr *shdr = elf_sheader(hdr);
  
@@ -402,16 +431,15 @@ static int elf_load_stage1(Elf32_Ehdr *hdr) {
 			// Skip if it the section is empty
 			if(!section->sh_size) continue;
 			// If the section should appear in memory
-			if(section->sh_flags & SHF_ALLOC) {
-				// Allocate and zero some memory
-
-//??????interesting, should return some errors here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! memset 
+			if(section->sh_flags & SHF_ALLOC) {      
+ //Assuming only one bss section        
 				void *mem = getmem(section->sh_size);
-				memset(mem, 0, section->sh_size);
+                //kprintf("memory here ..................%d......................\n",mem);
+				memsets(mem, 0, section->sh_size);
  
 				// Assign the memory offset to the section offset
 				section->sh_offset = (int)mem - (int)hdr;
-				kprintf("Allocated memory for a section (%ld).\n", section->sh_size);
+				//kprintf("Allocated memory for a section (%ld).\n", section->sh_size);
 			}
 		}
 	}
@@ -454,7 +482,7 @@ static int elf_load_stage2(Elf32_Ehdr *hdr) {
  *----------------------------------------------------------------------------------
  */
 static int elf_do_reloc(Elf32_Ehdr *hdr, Elf32_Rel *rel, Elf32_Shdr *reltab) {
-    kprintf("#%d to be relocated\n", count++);
+    //kprintf("#%d to be relocated\n", count++);
 
 	Elf32_Shdr *target = elf_section(hdr, reltab->sh_info);
  

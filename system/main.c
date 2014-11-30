@@ -14,8 +14,11 @@ process	main(void)
 
     void* helloworld = load_program("helloworld");
     void* hihi = load_program("hihi");
+    void* helloworld2 = load_program("helloworld");
 	resume(create(helloworld, 4096, 20, "helloworld", 2, 0, NULL));
 	resume(create(hihi, 4096, 20, "helloworld", 2, 0, NULL));
+    resume(create(helloworld2, 4096, 20, "helloworld2", 2, 0, NULL));
+   
 
 	return OK;
 }

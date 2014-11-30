@@ -18,16 +18,17 @@ void*	load_program(
   
 
     int fd = open(RFILESYS, path, "or");  //load and open helloworld
-    kprintf("%s\n", *path);
+   // kprintf("%s\n", *path);
     int32 filesize = control(RFILESYS, RFS_CTL_SIZE, fd, 0);
     void *file =(void *)getmem(filesize);
     int rc = read(fd, file, filesize);
-    kprintf("read helloworld here %d\n", file);
+    close(fd);
+   // kprintf("read helloworld here %d\n", file);
 
     
     elf_load_file(file);
-    char *mainadd =elf_lookup_main(file);
-    kprintf("main function, %d ",mainadd );
+    char *mainadd =(char *)elf_lookup_main(file);
+   // kprintf("main function, %d ",mainadd );
 	
 
 return mainadd;
