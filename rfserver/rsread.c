@@ -27,6 +27,14 @@ void	rsread (
 	char	*to, *from;		/* used during copy		*/
 	int	nbytes;			/* num. of bytes read from file	*/
 
+	retval = stat(reqptr->rf_name, &buf);
+	if(retval >= 0) {
+		if(buf.st_mode & S_IFDIR) {
+			rsdirread(reqptr, resptr);
+			return;
+		}
+	}
+
 	/* if file is not open, try to open it */
 
 	if (findex < 0) {

@@ -69,6 +69,9 @@ void	rsopen (
 	if (sreturn < 0) {	/* file does not exist */
 /*DEBUG*/ printf("DEBUG: creating file %s\n",reqptr->rf_name);
 		fd = rsofile(reqptr->rf_name, O_RDWR|O_CREAT);
+	} else if (sbuff.st_mode & S_IFDIR) {
+		printf("DEBUG: opening directory %s\n", reqptr->rf_name);
+		fd = rsodir(reqptr->rf_name);
 	} else {
 /*DEBUG*/ printf("DEBUG: opening old file %s\n",reqptr->rf_name);
 		fd = rsofile(reqptr->rf_name, O_RDWR);

@@ -1,10 +1,10 @@
 rfserver:	rfserver.o rsdelete.o rsmkdir.o rsopen.o		\
-		rsrmdir.o rsread.o rsstat.o rstrunc.o			\
-		rswrite.o rsofile.o snderr.o sndok.o
+		rsrmdir.o rsread.o rsstat.o rstrunc.o rsclose.o		\
+		rswrite.o rsofile.o snderr.o sndok.o rsodir.o rsdirread.o
 		gcc -o rfserver rfserver.o rsdelete.o			\
 			rsmkdir.o rsopen.o rsrmdir.o rsread.o		\
 			rsstat.o rstrunc.o rswrite.o rsofile.o		\
-			snderr.o sndok.o
+			snderr.o sndok.o rsclose.o rsodir.o rsdirread.o
 		mv rfserver ../programs
 
 rfserver.o:	rfserver.c
@@ -55,3 +55,12 @@ snderr.o:	snderr.c
 
 sndok.o:	sndok.c
 		gcc -c sndok.c
+
+rsclose.o:	rsclose.c
+		gcc -c rsclose.c
+
+rsodir.o:	rsodir.c
+		gcc -c rsodir.c
+
+rsdirread.o:	rsdirread.c
+		gcc -c rsdirread.c

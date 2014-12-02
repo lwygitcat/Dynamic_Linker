@@ -15,6 +15,7 @@ extern	int addrlen;			/* size of the above address	*/
 
 struct	fentry {			/* entry in table of open files	*/
 	int	desc;			/* descriptor or -1 if not used	*/
+	DIR	*dirptr;		/* Pointer to open directory	*/
 	char	name[RF_NAMLEN+1];	/* null-terminated file name	*/
 };
 extern	struct	fentry ofiles[MAXFILES];/* open file table		*/

@@ -51,12 +51,13 @@ int	main (int argc, char *argv[])
 	char	*to, *from;		/* used during name copy	*/
 	int	len;			/* length of name		*/
 /*DEBUG*/ char	*typnams[] = {"error", "read", "write", "open", "delete",
-/*DEBUG*/	  "truncate", "size", "make directory", "remove directory"};
+/*DEBUG*/	  "truncate", "size", "make directory", "remove directory", "close"};
 
 	/* initialize table that records open files */
 
 	for (i=0; i<MAXFILES; i++) {
 		ofiles[i].desc = -1;
+		ofiles[i].dirptr = NULL;
 		for (j=0; j<RF_NAMLEN; j++) {
 			ofiles[i].name[j] = NULLCH;
 		}
@@ -187,7 +188,7 @@ int	main (int argc, char *argv[])
 
 		for (findex=0; findex<MAXFILES; findex++) {
 			fptr = &ofiles[findex];
-			if (fptr->desc < 0) {
+			if ((fptr->desc < 0) && (fptr->dirptr == NULL)) {
 				continue;
 			}
 			if (strncmp(mptr->rf_name,fptr->name,RF_NAMLEN)
@@ -244,6 +245,9 @@ int	main (int argc, char *argv[])
 				  (struct rf_msg_xres *)rptr );
 			break;
 
+		case RF_MSG_CREQ:
+			rsclose(  (struct rf_msg_creq *)mptr,
+				  (struct rf_msg_cres *)rptr );
 		}
 
 	}
