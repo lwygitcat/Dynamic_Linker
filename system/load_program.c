@@ -11,6 +11,9 @@ void*	load_program(
 	  char		*path		/* Path to the program 		*/
         )
 {
+   setloadmode(1); //load functions
+   
+   
    if(xinuload_count==0){
     xinuload_count++;
     elf_readxinu(); 
@@ -23,7 +26,6 @@ void*	load_program(
     void *file =(void *)getmem(filesize);
     int rc = read(fd, file, filesize);
     close(fd);
-   // kprintf("read helloworld here %d\n", file);
 
     
     elf_load_file(file);

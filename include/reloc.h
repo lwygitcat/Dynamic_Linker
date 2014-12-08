@@ -188,6 +188,35 @@ enum RtT_Types {
 # define DO_386_32(S, A)	((S) + (A))
 # define DO_386_PC32(S, A, P)	((S) + (A) - (P))
 
+/*for load library*/
+
+#define MAXLIB 3
+#define MAXFUN 10	
+
+
+
+
+
+typedef struct{
+  char *funcname;
+  uint32 funcaddr;
+  int isdirty;
+} funrec;
+
+extern funrec funrecs[31];  //store all the function records
+
+
+extern funrec tempfuncrecs[10];
+
+
+typedef struct {
+   char *libname;
+   int startid;
+   int isdirty;
+}libheader;
+extern libheader libheads[3];// store all the library
+
+
 
 
 
@@ -196,4 +225,7 @@ enum RtT_Types {
 
 /*put in the very end, xinu.elf address public */
 extern	Elf32_Ehdr *syshdr;
+
+/*load_program or load_library*/
+extern int loadmode; 
 // Used in other .c file format: extern pid32 eventprocesspid;

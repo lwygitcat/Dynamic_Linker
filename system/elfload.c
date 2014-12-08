@@ -22,8 +22,11 @@
 
 int count=0;
 Elf32_Ehdr *syshdr ; //xinu.elf header
+int loadmode;
+funrec funrecs[31];
 static int elf_load_stage1(Elf32_Ehdr *hdr);
 static int elf_load_stage2(Elf32_Ehdr *hdr);
+int elf_load_stage3(Elf32_Ehdr *hdr);
 static int elf_do_reloc(Elf32_Ehdr *hdr, Elf32_Rel *rel, Elf32_Shdr *reltab);
 void * elf_lookup_symbol(const char * name);
 
@@ -103,6 +106,22 @@ static inline void *elf_load_rel(Elf32_Ehdr *hdr) {
 		kprintf("Unable to load ELF file.\n");
 		return NULL;
 	}
+	
+	//
+	if (loadmode ==2){
+		result = elf_load_stage3(hdr);     //put functions in the storage;
+		if(result == ELF_RELOC_ERR) {
+				kprintf("Unable to load library \n"); 
+				return SYSERR;
+			} 
+		
+	}
+	
+	
+	
+	//louweiyi
+	
+	
 	// TODO : Parse the program header (if present)
 	return (void *)hdr->e_entry;  
 }
@@ -110,6 +129,8 @@ static inline void *elf_load_rel(Elf32_Ehdr *hdr) {
 
 void *elf_load_file(void *file) {
 	Elf32_Ehdr *hdr = (Elf32_Ehdr *)file;
+
+
 	if(!elf_check_supported(hdr)) {
 		kprintf("ELF File cannot be loaded.\n");
 		return NULL;
@@ -165,6 +186,14 @@ static int elf_get_symval(Elf32_Ehdr *hdr, int table, uint32 idx) {
 	int symaddr = (int)hdr + symtab->sh_offset;
 	Elf32_Sym *symbol = &((Elf32_Sym *)symaddr)[idx];
    
+	
+	
+	
+	
+	//possible
+	
+	
+	
    //segment2
    if(symbol->st_shndx == SHN_UNDEF) { //The Section Related To This Symbol
 		// External symbol, lookup value
@@ -247,7 +276,7 @@ void * elf_readxinu()
     return NULL;
 }
 
-int strcomp(char* s1, char* s2)
+int strcomp(const char* s1, const char* s2)
 {
      while(*s1 && (*s1==*s2))
          s1++,s2++;
@@ -312,8 +341,6 @@ void * elf_lookup_symbol(const char * name)   //search symtab, find .text sectio
 
   return (void*)(symbol->st_value);  // right
 }
-
-
 
 
 
@@ -466,7 +493,6 @@ static int elf_load_stage2(Elf32_Ehdr *hdr) {
 			for(idx = 0; idx < section->sh_size / section->sh_entsize; idx++) {
 				Elf32_Rel *reltab = &((Elf32_Rel *)((int)hdr + section->sh_offset))[idx];
 				int result = elf_do_reloc(hdr, reltab, section);
-				// On error, display a message and return
 				if(result == ELF_RELOC_ERR) {
 					kprintf("Failed to relocate symbol.\n");
 					return ELF_RELOC_ERR;
@@ -476,6 +502,212 @@ static int elf_load_stage2(Elf32_Ehdr *hdr) {
 	}
 	return 0;
 }
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------------
+ *  putfunc  -  Load library, put the sym to the function info
+ *----------------------------------------------------------------------------------
+ */
+
+int putfunc(char *funcname, int funcaddr)
+{
+	 //prepare some slot for unload library
+	int id;
+	
+	
+	//check numduplicate, check if dirty
+	for (id =1; id<=30; id++){
+		if((strcomp(funcname, funrecs[id].funcname)==0)	  &&   (funrecs[id].isdirty ==1) ){ 
+        //  if(id ==0) {
+         //    kprintf("sorry, two main not allowed !\n");
+         //    return -1;
+          // }
+		 // else {	
+             kprintf("gotta! , you are already here, id number: %d,   name : %s\n", id, funrecs[id].funcname);
+			 return -1;
+          // }
+          
+		}
+		
+	}
+	
+	for (id =1; id<=30; id++){
+		//waht's the initial value of struct
+		if(funrecs[id].isdirty ==0){
+			funrecs[id].funcname = funcname;
+			funrecs[id].funcaddr =funcaddr;
+			funrecs[id].isdirty =1;
+			break;
+		}		
+		
+	}
+	if (id>30)
+		kprintf("you have already loaded 3 libraries, wait for unload\n");
+	return 0;
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------------
+ *  elf_load_stage3  -  Try To Load all the functions to the set
+ *----------------------------------------------------------------------------------
+ */
+
+ int elf_load_stage3(Elf32_Ehdr *hdr) {
+	Elf32_Shdr *shdr = elf_sheader(hdr);
+ 
+	 int i;
+     int idx =0;
+     int idy=0;
+	 int funcount=0;
+	// Iterate over section headers
+	for(i = 0; i < hdr->e_shnum; i++) {
+		Elf32_Shdr *section = &shdr[i];
+      
+		// If this is a symtab section, more than 1 symtab is OK
+		if(section->sh_type == SHT_SYMTAB) {
+ 
+           Elf32_Shdr *strtab = elf_section(hdr, section->sh_link);
+
+
+			//check if too many functions in a library;
+			for(idx = 0; idx < section->sh_size / section->sh_entsize; idx++) {
+                Elf32_Sym *tempsym = &((Elf32_Sym *)((int)hdr + section->sh_offset))[idx];
+                
+				if (    (ELF32_ST_BIND(tempsym->st_info)==STB_GLOBAL)  &&  (ELF32_ST_TYPE(tempsym->st_info)==STT_FUNC)   ){
+					funcount++;
+                  int mark = (int)hdr + strtab->sh_offset + tempsym->st_name;
+				  char *funcname =(char*)mark;	
+                  if (strcomp(funcname, "main")==0)	 {
+                  kprintf("sorry, two main not allowed !\n");
+                  return -1;
+                 }
+                   
+              
+                  }
+           //     kprintf("funcount now is %d\n", funcount);
+				if(funcount >10){
+				   kprintf("trying to load too many functions \n");
+				   return SYSERR;
+				}
+				   
+			}
+			
+			
+			
+			
+			
+			//funnum appropriate, Load functions
+     // Elf32_Shdr *strtab = elf_section(hdr, section->sh_link);
+			for(idy = 0; idy < section->sh_size / section->sh_entsize; idy++) {
+				
+				Elf32_Sym *tempsym = &((Elf32_Sym *)((int)hdr + section->sh_offset))[idy];
+				/*if Function, Bind is Global, a function to be put into */
+				if (    (ELF32_ST_BIND(tempsym->st_info)==STB_GLOBAL)  &&  (ELF32_ST_TYPE(tempsym->st_info)==STT_FUNC)   ){
+				       int mark = (int)hdr + strtab->sh_offset + tempsym->st_name;
+				       char *funcname =(char*)mark;		
+				      Elf32_Shdr *target = elf_section(hdr, tempsym->st_shndx); //func in the map
+				       int funcaddress = (int)hdr + target->sh_offset+tempsym->st_value;
+					   int result = putfunc(funcname,funcaddress);
+				       
+				        if (result == ELF_RELOC_ERR){
+				        	kprintf("Conflict function or library \n");
+				        	return SYSERR;
+				        }
+					
+				}
+				
+
+				
+				
+				}
+		}
+		
+			
+		
+	}
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+
+void* find_library_function(char* name){
+	int id;
+	//void *addr;
+	for (id =1; id<=30; id++){
+		if((strcomp(name, funrecs[id].funcname)==0)	  &&   (funrecs[id].isdirty ==1) ){
+			kprintf("find_library_function success\n");
+			return (void *) funrecs[id].funcaddr;
+		}
+		
+	}
+	
+	//function not found
+	kprintf("function not found in library\n");
+	return NULL; 
+	
+	
+	
+}
+
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*----------------------------------------------------------------------------------
  *  elf_do_reloc  -  Relocate the symbols
@@ -525,4 +757,11 @@ static int elf_do_reloc(Elf32_Ehdr *hdr, Elf32_Rel *rel, Elf32_Shdr *reltab) {
 	return symval;
 }
    
+
+//set load mode, can either be 1: load_program or 2: load_library
+   int setloadmode(int mode){
+	   loadmode = mode;
+       return 0;
+	   
+   }
 

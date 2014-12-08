@@ -14,7 +14,7 @@ int32	add1 (
 	)
 {
     ett =2;
-    kprintf("%d", ett);
+    //kprintf("%d", ett);
 	return (val + 1);
 }
 
@@ -64,4 +64,40 @@ int32	add6 (
 {
 	return (val + 2);
 }
+
+
+int32	add7 (
+	int32	val	/* Value to be increased */
+	)
+{
+	return (val + 2);
+}
+
+
+int32	add8 (
+	int32	val	/* Value to be increased */
+	)
+{
+	return (val + 2);
+}
+
+
+int32	add9 (
+	int32	val	/* Value to be increased */
+	)
+{
+	return (val + 2);
+}
+
+
+
+int32	add10 (
+	int32	val	/* Value to be increased */
+	)
+{
+	return (val + 2);
+}
+
+
+
 
