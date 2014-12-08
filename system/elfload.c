@@ -2,22 +2,6 @@
 
 #include <xinu.h>
 
-/* -----------------------------------------------------------------------
-* To be solved
-* 1. All Error message in the elf_load_file not defined
-* 2. Function elf_load_stage1(),elf_load_stage2() not defined >DECIDED to delete the elf_load_rel function.
-* 3. in elf_load_file(), does xinu support string type? > using char[] type
-* 4. How to decide where the file is loaded > using a char[] big enough to hold it.
-* 5. We need to make the memory address of the xinu.elf public
-* 6. Ignoring section names functions, Is it necessary?
-* 7. [!! Important]Error, Write, Debug, Warn functions inside need to be modifed
-* 9. [!! Important]elf_lookup_symbol(name) // find the symbol address based on the symbol name need to be modified
-* 10. Alternative way of implementing memset, make all the bss section 0
-* 11. Double check the reloc.h file, may missing something or duplicate
-*-------------------------------------------------------------------------
-*/
-
-
 //Global variable to store the address of the xinu.elf file. refer to event eventprocess.c
 
 int count=0;
@@ -119,9 +103,6 @@ static inline void *elf_load_rel(Elf32_Ehdr *hdr) {
 	
 	
 	
-	//louweiyi
-	
-	
 	// TODO : Parse the program header (if present)
 	return (void *)hdr->e_entry;  
 }
@@ -186,12 +167,7 @@ static int elf_get_symval(Elf32_Ehdr *hdr, int table, uint32 idx) {
 	int symaddr = (int)hdr + symtab->sh_offset;
 	Elf32_Sym *symbol = &((Elf32_Sym *)symaddr)[idx];
    
-	
-	
-	
-	
-	//possible
-	
+
 	
 	
    //segment2
@@ -247,21 +223,6 @@ return (int)target;
  *  elf_lookup_symbol  -  Look up symbol using symbol name in xinu.elf's symtab  ( xinu.elf do not have relocation section )
  *----------------------------------------------------------------------------------
  */
-/* Xinu.elf  Section Header Inforamtion
-Section Headers:
-  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
-  [ 0]                   NULL            00000000 000000 000000 00      0   0  0
-  [ 1] .text             PROGBITS        00100000 001000 014000 00  AX  0   0 32
-  [ 2] .eh_frame         PROGBITS        00114000 015000 00325c 00   A  0   0  4
-  [ 3] .data             PROGBITS        00117260 018260 001da0 00  WA  0   0 32
-  [ 4] .bss              NOBITS          00119000 01a000 020000 00  WA  0   0 32
-  [ 5] .comment          PROGBITS        00000000 01a000 00002d 01  MS  0   0  1
-  [ 6] .shstrtab         STRTAB          00000000 01a02d 00003f 00      0   0  1
-  [ 7] .symtab           SYMTAB          00000000 01a1d4 002e20 10      8 303  4
-  [ 8] .strtab           STRTAB          00000000 01cff4 0019af 00      0   0  1
-
-*/
-
 
 void * elf_readxinu()
 {
@@ -329,13 +290,6 @@ void * elf_lookup_symbol(const char * name)   //search symtab, find .text sectio
       kprintf("could not find function \n");
       return NULL;
   }
-
-  // kprintf("address: %d\n", idx);
- //  kprintf("target->offset is %d\n",target->sh_offset );
- //  kprintf("symbol->st_value is %d\n", symbol->st_value); 
- //  kprintf("in total is %d", 0x100000+symbol->st_value+target->sh_offset );
- 
-  
 
 
 
@@ -411,26 +365,6 @@ void * elf_lookup_main(Elf32_Ehdr *hdr){  //get main address, return main
  *  elf_load_stage1  -  Try Loading the ELF file, and Getmemory for BSS Sections
  *----------------------------------------------------------------------------------
  */
-
-/* Section Header info of helloworld
-Section Headers:
-  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
-  [ 0]                   NULL            00000000 000000 000000 00      0   0  0
-  [ 1] .text             PROGBITS        00000000 000034 00001c 00  AX  0   0  4
-  [ 2] .rel.text         REL             00000000 0003f8 000010 08     11   1  4
-  [ 3] .data             PROGBITS        00000000 000050 000000 00  WA  0   0  4
-  [ 4] .bss              NOBITS          00000000 000050 000000 00  WA  0   0  4
-  [ 5] .rodata           PROGBITS        00000000 000050 00000e 00   A  0   0  1
-  [ 6] .comment          PROGBITS        00000000 00005e 00002e 01  MS  0   0  1
-  [ 7] .note.GNU-stack   PROGBITS        00000000 00008c 000000 00      0   0  1
-  [ 8] .eh_frame         PROGBITS        00000000 00008c 000038 00   A  0   0  4
-  [ 9] .rel.eh_frame     REL             00000000 000408 000008 08     11   8  4
-  [10] .shstrtab         STRTAB          00000000 0000c4 00005f 00      0   0  1
-  [11] .symtab           SYMTAB          00000000 00032c 0000b0 10     12   9  4
-  [12] .strtab           STRTAB          00000000 0003dc 00001b 00      0   0  1
-
-*/
-
 
 //for uninitialized variables
 void memsets(void *mem, int setnumber, int size){
@@ -556,23 +490,6 @@ int putfunc(char *funcname, int funcaddr)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*----------------------------------------------------------------------------------
  *  elf_load_stage3  -  Try To Load all the functions to the set
  *----------------------------------------------------------------------------------
@@ -653,58 +570,6 @@ int putfunc(char *funcname, int funcaddr)
 	}
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-void* find_library_function(char* name){
-	int id;
-	//void *addr;
-	for (id =1; id<=30; id++){
-		if((strcomp(name, funrecs[id].funcname)==0)	  &&   (funrecs[id].isdirty ==1) ){
-			kprintf("find_library_function success\n");
-			return (void *) funrecs[id].funcaddr;
-		}
-		
-	}
-	
-	//function not found
-	kprintf("function not found in library\n");
-	return NULL; 
-	
-	
-	
-}
-
-
-
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
