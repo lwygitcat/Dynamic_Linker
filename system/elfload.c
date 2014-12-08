@@ -18,7 +18,7 @@ void * elf_lookup_symbol(const char * name);
 bool8 elf_check_file(Elf32_Ehdr *hdr) {
 	if(!hdr) return SYSERR;
 	if(hdr->e_ident[EI_MAG0] != ELFMAG0) {
-		kprintf("ELF Header EI_MAG0 incorrect.\n");
+		kprintf("Error! \n");
 		return SYSERR;
 	}
 	if(hdr->e_ident[EI_MAG1] != ELFMAG1) {

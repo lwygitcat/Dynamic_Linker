@@ -99,5 +99,11 @@ int32	add10 (
 }
 
 
+int32	add11 (
+	int32	val	/* Value to be increased */
+	)
+{
+	return (val + 2);
+}
 
 

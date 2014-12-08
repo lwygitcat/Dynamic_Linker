@@ -13,13 +13,17 @@ static int xinuload_count;
 funrec funrecs[31];  //store all the function records
 libheader libheads[3];// store all the library
 
-
+static int librarycount;
 
 syscall	load_library(
 	  char		*path		/* Path to the library 		*/
         )
 {
-	
+	librarycount++;
+    if (librarycount>3){
+      kprintf("Error: Load more than 3 libs\n");
+      return SYSERR; 
+    }
 	setloadmode(2);
     int result;
 
