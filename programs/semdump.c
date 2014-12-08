@@ -7,15 +7,12 @@
  *------------------------------------------------------------------------
  */
 
-
 /*
 xsh $ semdump
 	Entry	State	Count	Queue
 	0	S_USED	3	3
 	1	S_FREE	0	0
 */
-
-
 
 /*
 struct	sentry	{
@@ -28,7 +25,7 @@ struct	sentry	{
 */
 
 
-struct	sentry semtab[];
+//struct	sentry semtab[];
 
 int	main (
 	int	argc,	/* Number of arguments	*/

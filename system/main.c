@@ -64,12 +64,6 @@ process	main(void)
 
 
 
-
-
-
-
-
-
     /*for shell*/
 
 	
