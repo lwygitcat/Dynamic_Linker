@@ -242,9 +242,10 @@ process	shell (
 			/* Command not found in the command table 	*/
 			/*   Attempt to dynamically load it		*/
 			dynamic_cmd = load_program(tokbuf);
-			
+		//	fprintf(dev, "return value is %s", dynamic_cmd);
 			/* If command could not be loaded send message	*/
 			if(dynamic_cmd == (void*)SYSERR) {
+                
 				fprintf(dev, "command %s not found\n", tokbuf);
 				continue;
 			}

@@ -13,7 +13,7 @@ process	main(void)
 	/* Start the network */
 
 	netstart();
-
+/*
     void* helloworld = load_program("helloworld");
 	resume(create(helloworld, 4096, 20, "helloworld", 2, 0, NULL));
     void* hello2 = load_program("helloworld");
@@ -65,14 +65,14 @@ process	main(void)
    void* hihi = load_program("hihi");
    resume(create(hihi, 4096, 20, "helloworld", 2, 0, NULL));
 
-
+*/
    
 
 
 
     /*for shell*/
 
-/*	
+
 
 	kprintf("\n...creating a shell\n");
 	recvclr();
@@ -87,7 +87,7 @@ process	main(void)
 		resume(create(shell, 4096, 20, "shell", 1, CONSOLE));
 	}
 
-*/
+
 
 
 	

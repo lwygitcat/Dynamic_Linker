@@ -21,6 +21,8 @@ void*	load_program(
   
 
     int fd = open(RFILESYS, path, "or");  //load and open helloworld
+    if (fd == -1)
+    return SYSERR;
    // kprintf("%s\n", *path);
     int32 filesize = control(RFILESYS, RFS_CTL_SIZE, fd, 0);
     void *file =(void *)getmem(filesize);
@@ -28,7 +30,9 @@ void*	load_program(
     close(fd);
 
     
-    elf_load_file(file);
+    int result = elf_load_file(file);  
+    if (result == SYSERR)
+     return SYSERR;
     char *mainadd =(char *)elf_lookup_main(file);
    // kprintf("main function, %d ",mainadd );
 	

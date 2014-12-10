@@ -16,22 +16,22 @@ void * elf_lookup_symbol(const char * name);
 
 /*Check the starting bits of the elf file*/
 bool8 elf_check_file(Elf32_Ehdr *hdr) {
-	if(!hdr) return SYSERR;
+	if(!hdr) return NULL;
 	if(hdr->e_ident[EI_MAG0] != ELFMAG0) {
-		kprintf("Error! \n");
-		return SYSERR;
+		//kprintf("Error! \n");
+		return NULL;
 	}
 	if(hdr->e_ident[EI_MAG1] != ELFMAG1) {
 		kprintf("ELF Header EI_MAG1 incorrect.\n");
-		return SYSERR;
+		return NULL;
 	}
 	if(hdr->e_ident[EI_MAG2] != ELFMAG2) {
 		kprintf("ELF Header EI_MAG2 incorrect.\n");
-		return SYSERR;
+		return NULL;
 	}
 	if(hdr->e_ident[EI_MAG3] != ELFMAG3) {
 		kprintf("ELF Header EI_MAG3 incorrect.\n");
-		return SYSERR;
+		return NULL;
 	}
 	return TRUE;
 }
@@ -42,28 +42,28 @@ bool8 elf_check_file(Elf32_Ehdr *hdr) {
 bool8 elf_check_supported(Elf32_Ehdr *hdr) {
     //return TRUE ;
 	if(!elf_check_file(hdr)) {
-		kprintf("Invalid ELF File.\n");
-		return SYSERR;
+		//kprintf("Invalid ELF File.\n");
+		return NULL;
 	}
 	if(hdr->e_ident[EI_CLASS] != ELFCLASS32) {
 		kprintf("Unsupported ELF File Class.\n");
-		return SYSERR;
+		return NULL;
 	}
 	if(hdr->e_ident[EI_DATA] != ELFDATA2LSB) {
 		kprintf("Unsupported ELF File byte order.\n");
-		return SYSERR;
+		return NULL;
 	}
 	if(hdr->e_machine != EM_386) {
 		kprintf("Unsupported ELF File target.\n");
-		return SYSERR;
+		return NULL;
 	}
 	if(hdr->e_ident[EI_VERSION] != EV_CURRENT) {
 		kprintf("Unsupported ELF File version.\n");
-		return SYSERR;
+		return NULL;
 	}
 	if(hdr->e_type != ET_REL && hdr->e_type != ET_EXEC) {
 		kprintf("Unsupported ELF File type.\n");
-		return SYSERR;
+		return NULL;
 	}
 	return TRUE;
 }
@@ -82,21 +82,21 @@ static inline void *elf_load_rel(Elf32_Ehdr *hdr) {
 	int result;
 	result = elf_load_stage1(hdr);
 	if(result == ELF_RELOC_ERR) {
-		kprintf("Unable to load ELF file.\n"); 
-		return NULL;
+		//kprintf("Unable to load ELF file.\n"); 
+		return (void*)SYSERR;
 	} 
 	result = elf_load_stage2(hdr);
 	if(result == ELF_RELOC_ERR) {
-		kprintf("Unable to load ELF file.\n");
-		return NULL;
+		//kprintf("Unable to load ELF file.\n");
+		return (void*)SYSERR;
 	}
 	
 	//
 	if (loadmode ==2){
 		result = elf_load_stage3(hdr);     //put functions in the storage;
 		if(result == ELF_RELOC_ERR) {
-				kprintf("Unable to load library \n"); 
-				return SYSERR;
+				//kprintf("Unable to load library \n"); 
+				return (void*)SYSERR;
 			} 
 		
 	}
@@ -113,8 +113,8 @@ void *elf_load_file(void *file) {
 
 
 	if(!elf_check_supported(hdr)) {
-		kprintf("ELF File cannot be loaded.\n");
-		return NULL;
+		//kprintf("ELF File cannot be loaded.\n");
+		return SYSERR;
 	}
 	switch(hdr->e_type) {
 		case ET_EXEC:
